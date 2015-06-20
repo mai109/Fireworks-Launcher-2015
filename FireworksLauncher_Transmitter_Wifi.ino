@@ -6,6 +6,15 @@
 //Changelog:
 //06.03.15 Created
 //06.06.15 Complete
+//06.18.15 Changes:
+//                  1)Fixing instances where captureChar is not properly turned off
+//                    (example: times when back and home buttons are hit)
+//                  2)Fixing testWifi connection where it is capturing the OK from its
+//                    own command ack instead of the OK received from the other arduino
+//                  3)Fixing a bug where the myChar is not properly emptied after setting
+//                    a custom delay / theme color
+//                  4)Fixing a bug where myChar was not properly emptied when "back" or 
+//                    "home" was hit
 
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
@@ -99,6 +108,7 @@ void keypadEvent(KeypadEvent eKey){  // this is code copied straight from exampl
               current[1] = '0'; 
             }
             captureChar = FALSE;
+            myChar = 0;
             drawMenu();
             break;
 	  case 'B': //main menu button
@@ -106,11 +116,13 @@ void keypadEvent(KeypadEvent eKey){  // this is code copied straight from exampl
             current[1] = '0';   
             currentLevel = 0; 
             captureChar = FALSE;
+            myChar = 0;
             drawMenu();
             break;      
 	  default:
             current[currentLevel] = eKey;
             currentLevel = 1;
+            captureChar = FALSE;
             drawMenu();
          }
      }
@@ -210,18 +222,21 @@ void testWifi(){
   wifi.print(F("AT+CIPSEND=1"));
   wifi.print('\r');
   wifi.print('\n');
-  delay(800);
+  flushSerial();
+  delay(700);
   wifi.print(F("T"));
   wifi.print('\r');
   wifi.print('\n');
   writeLine(3,F("Waiting..."));
-  //flushSerial();
-  delay(1000);
+  delay(600);
+  Serial.find("OK");
+  delay(20);
   byte loops = 0;
-  while((!wifi.find("+")) && (loops<100)){
+  while((!wifi.find("+")) && (loops<40)){
     delay(30);
     loops++;
   }
+  delay(10); //make sure entire serial message has come in
   wifi.find(":");
   if(wifi.read() == 'O'){
     writeLine(5,F("SUCCESS!!"));
@@ -229,6 +244,7 @@ void testWifi(){
   else{
     writeLine(5,F("Failure :/"));
   }  
+  flushSerial();
 }
 
 void launchMenu(){
@@ -294,11 +310,11 @@ void customDelay(){
 void clearSequence(){
   menuClear();
   writeLine(1,F("Please Wait..."));
-  delay(1000);
+  delay(600);
   launchSequence = "";
   menuClear();
   writeLine(1,F("Done!"));
-  delay(700);
+  delay(400);
   current[1] = '0';
   drawMenu();
 }
@@ -452,6 +468,7 @@ void setColor(){
       color = WHITE;
   }
   current[1] = '0';
+  myChar = 0;
   drawFrame();
   drawMenu();  
   captureChar = FALSE;
@@ -520,6 +537,8 @@ void startupSequence(){
   tft.setTextSize(3);
   tft.setTextColor(WHITE);
   tft.print(F("Loading"));
+  delay(1000);
+  tft.print(".");
   delay(1000);
   tft.print(".");
   delay(1000);
