@@ -17,7 +17,8 @@
 //                    "home" was hit
 //06.19.15 Adapted Code to be controlled by captouch
 //06.22.15 -Completed captouch adaption
-//         -Removed Unnecessary serial debug code
+//         -Removed Unnecessary serial debug code\
+//7.02.15 Added handler for launch button
 
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
@@ -49,6 +50,8 @@
 
 #define TOP_FRAME_SIZE 40
 #define BOTTOM_FRAME_SIZE 22
+#define launchButton 7
+#define launchLight 6
 
 byte rowPins[ROWS] = {6,5,4,3};
 byte colPins[COLS] = {A2,A1,A0,8};
@@ -80,6 +83,9 @@ void setup() {
   //cap.begin(9600);
   wifi.begin(9600);
   wifi.setTimeout(100);
+  pinMode(launchButton, INPUT_PULLUP);
+  pinMode(launchLight, OUTPUT);
+  digitalWrite(launchLight, LOW);
   startupSequence();
 //  keypad.addEventListener(keypadEvent);
 //  keypad.setDebounceTime(debounceTime);
@@ -476,17 +482,22 @@ void launchConfirm(){
     tft.setCursor(10,(TOP_FRAME_SIZE + 44));
     tft.print(launchSequence);
     writeLine(5,F("(middle if ok)"));
-    while((myChar != 'E') && (myChar != 'L')){
+    for(int pwm = 20; pwm<255; pwm++){
+      analogWrite(launchLight, pwm);
+      delay(5);
+    }
+    while((myChar != 'E') && (myChar != 'L') && (digitalRead(launchButton) == HIGH)){
      // keypad.getKey();
      capTouchGetKey();
     }
-    if(myChar == 'E'){
+    if((myChar == 'E') || (digitalRead(launchButton) == LOW)){
       current[1]++;
       current[1]++;
     }
     else{
       current[1] = '0';
     }
+    digitalWrite(launchLight,LOW);
     myChar = 0;
   }
 }
