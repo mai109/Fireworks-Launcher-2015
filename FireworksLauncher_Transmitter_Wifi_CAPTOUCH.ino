@@ -19,7 +19,10 @@
 //06.22.15 -Completed captouch adaption
 //         -Removed Unnecessary serial debug code\
 //7.02.15 Added handler for launch button
-
+//7.04.15 Added handler for launch button in manual
+//        mode and made the launch butto the only way
+//        to launch a manual frame to prevent accidental
+//        fires with the captouch wheel
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
 #include <Keypad.h>
@@ -556,6 +559,7 @@ void manualMode(){
   char newNum = '1';
   tft.setCursor(146,162);
   tft.print(newNum); 
+  digitalWrite(launchLight, HIGH);
   while(myChar != 'L'){
     myChar = 0;
     capTouchGetKey();
@@ -577,7 +581,7 @@ void manualMode(){
       //tft.fillRect(146,162,25,40,BLACK);
       oldNum = newNum;
     }
-    else if (update > 160){
+    /*else if (update > 160){
       newNum = update - 160;
       launchSingle(newNum);
       newNum = '1';
@@ -588,11 +592,10 @@ void manualMode(){
       tft.setTextColor(color);
       tft.print(newNum);
       oldNum = '1';
-    }
+    }*/
     else{
-      if(myChar == 'E'){
-        newNum = update;
-        launchSingle(newNum);
+      if(digitalRead(launchButton) == LOW){
+        launchSingle(oldNum);
         newNum = '1';
         tft.setCursor(146,162);
         tft.setTextColor(BLACK);
@@ -607,6 +610,7 @@ void manualMode(){
   }
   myChar = 0;
   current[1] = '0';  
+  digitalWrite(launchLight, LOW);
 }
 
 void launchSingle(char channel){
