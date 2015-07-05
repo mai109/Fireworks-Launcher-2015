@@ -489,11 +489,11 @@ void launchConfirm(){
       analogWrite(launchLight, pwm);
       delay(5);
     }
-    while((myChar != 'E') && (myChar != 'L') && (digitalRead(launchButton) == HIGH)){
+    while((myChar != 'L') && (digitalRead(launchButton) == HIGH)){
      // keypad.getKey();
      capTouchGetKey();
     }
-    if((myChar == 'E') || (digitalRead(launchButton) == LOW)){
+    if((digitalRead(launchButton) == LOW)){
       current[1]++;
       current[1]++;
     }
